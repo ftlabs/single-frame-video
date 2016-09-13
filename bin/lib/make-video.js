@@ -1,3 +1,5 @@
+const debug = require('debug')('bin:lib:make-video');
+
 const FfmpegJob = require('./ffmpeg-job');
 
 const waitingJobs = [];
@@ -13,7 +15,7 @@ function checkJobs(){
 		const nextJob = waitingJobs.shift();
 
 		if(nextJob !== undefined){
-			console.log('Starting job...', nextJob.id);
+			debug('Starting job...', nextJob.id);
 			nextJob.start();
 			runningJobs.push(nextJob);
 		}
@@ -32,7 +34,7 @@ function checkJobs(){
 	Object.keys(completedJobs).forEach(id => {
 
 		if( (new Date() * 1) - completedJobs[id].timeFinished > maxJobAge){
-			console.log(`Job ${id} is too old. Removing.`);
+			debug(`Job ${id} is too old. Removing.`);
 			completedJobs[id].cleanup();
 			delete completedJobs[id];
 		}
@@ -40,7 +42,7 @@ function checkJobs(){
 	});
 
 
-	console.log(completedJobs);
+	debug(completedJobs);
 
 }
 

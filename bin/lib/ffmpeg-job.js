@@ -1,3 +1,4 @@
+const debug = require('debug')('bin:lib:ffmpeg-job');
 const fs = require('fs');
 const spawn = require('child_process').spawn;
 const shortid = require('shortid');
@@ -14,7 +15,7 @@ function Job(image, audio){
 }
 
 Job.prototype.start = function(){
-	console.log(`Starting job: ${this.id}...`);	
+	debug(`Starting job: ${this.id}...`);	
 
 	const args = [
 		'-loop', 
@@ -44,18 +45,18 @@ Job.prototype.start = function(){
 	this._process = spawn(ffmpeg.path, args);
 
 	this._process.stdout.on('data', (data) => {
-		console.log(`stdout: ${data}`);
+		debug(`stdout: ${data}`);
 	});
 
 	this._process.stderr.on('data', (data) => {
-		console.log(`stderr: ${data}`);
+		debug(`stderr: ${data}`);
 	});
 
 	this._process.on('close', (code) => {
 		
 		const outputDestination = `${process.env.TMP_FOLDER}/${this.id}.mp4`;
 		
-		console.log(outputDestination);
+		debug(outputDestination);
 		
 		this.destination = outputDestination;
 		this.processing = false;
@@ -64,10 +65,10 @@ Job.prototype.start = function(){
 		this._process = undefined;
 
 		if(code === 1){
-			console.log('FFMPEG exited with 1');
+			debug('FFMPEG exited with 1');
 		} else if(code === 0){
-			console.log("FFMPEG closed and was happy");
-			console.log(this);
+			debug("FFMPEG closed and was happy");
+			debug(this);
 		}
 	
 	});
@@ -75,7 +76,7 @@ Job.prototype.start = function(){
 }
 
 Job.prototype.cleanup = function(){
-	console.log(`Cleaning up: ${this.id}`);
+	debug(`Cleaning up: ${this.id}`);
 	fs.unlink(`${this.audio.path}`);
 	fs.unlink(`${this.image.path}`);
 	fs.unlink(`${this.destination}`);

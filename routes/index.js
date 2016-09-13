@@ -1,3 +1,4 @@
+const debug = require('debug')('routes:index');
 const express = require('express');
 const router = express.Router();
 
@@ -13,7 +14,7 @@ router.get('/', function(req, res, next) {
 
 router.post('/create', upload.array('file', 2), function(req, res){
 
-  console.log(req.files);
+  debug(req.files);
 
   makeVideo.create(req.files[1], req.files[0])
     .then(jobID => {
