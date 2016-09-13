@@ -1,0 +1,233 @@
+<h1>Create a single-frame video</h1>
+<p>Drag and drop an .mp3 file onto the left box and a single image file onto the right box and then click upload to create a single frame video</p>
+
+<form method="POST" action="/create" id="uploadForm">
+
+	<div id="audioDrop" class="dropzone" data-filetype="audio">
+		<p class="filename">Drop audio file here</p>
+	</div>
+	<div id="imageDrop" class="dropzone" data-filetype="image">
+		<p class="filename">Drop image file here</p>
+	</div>
+
+	<button class="o-buttons" data-visible="false">Upload</button>
+
+</form>
+
+<div id="progressOverlay" class="overlay" data-visible="false">
+
+	<div id="holder" class="info">
+		<h3>Uploading files...</h3>
+		<div id="bar"></div>
+	</div>
+
+</div>
+
+<div id="jobStatusOverlay" class="overlay" data-visible="false">
+
+	<div id="holder" class="info">
+		<h3>Processing</h3>
+		<div id="status"></div>
+	</div>
+
+</div>
+
+<div id="downloadOverlay" class="overlay" data-visible="false">
+
+	<div id="holder" class="info">
+		<h3>Download Video</h3>
+		<p>This link will be valid for 30 minutes</p>
+		<a href="">video file</a>
+	</div>
+
+</div>
+
+<script>
+
+	function prevent(event){
+		event.preventDefault();
+		event.stopPropagation();
+	}
+
+	window.addEventListener("dragover",function(e){
+		prevent(e);
+		document.body.dataset.dragging = "true";
+	},false);
+
+	window.addEventListener("drop",function(e){
+		prevent(e);
+		document.body.dataset.dragging = "false";
+	},false);
+
+	window.addEventListener('dragleave', function(e){
+		prevent(e);		
+		document.body.dataset.dragging = "false";
+	}, false);
+
+	document.querySelector('#uploadForm').addEventListener('submit', function(e){
+		prevent(e);
+
+		if(formData !== undefined){
+			uploadFormToServer();
+		}
+
+	}, false);
+
+	var droppedFiles = {
+		audio : undefined,
+		image : undefined
+	}
+
+	var audioDropZone = document.querySelector('#audioDrop');
+	var imageDropZone = document.querySelector('#imageDrop');
+
+	var formData = undefined;
+
+	var jobStatus = undefined;
+
+	function checkJobStatus(id){
+
+		fetch('/check/' + id)
+			.then(function(res){
+				return res.text();
+			})
+			.then(function(status){
+				console.log(status);
+
+				var infoBox = document.querySelector('#jobStatusOverlay #status');
+
+				if(status === "waiting"){
+					infoBox.textContent = "Job status: In queue";
+				} else if(status === "running"){
+					infoBox.textContent = "Job status: Converting to video...";				
+				} else if(status === "finished"){
+					clearInterval(jobStatus);
+					infoBox.textContent = "Job status: Finished. Getting link...";
+
+					document.querySelector('#jobStatusOverlay').dataset.visible = "false";
+					
+					var downloadOverlay = document.querySelector('#downloadOverlay');
+					downloadOverlay.querySelector('a').setAttribute('href', '/download/' + id);
+					document.querySelector('#downloadOverlay').dataset.visible = "true";
+
+				}
+
+			})
+		;
+
+	}
+
+	function uploadFormToServer(){
+		var oReq = new XMLHttpRequest();
+
+		oReq.upload.addEventListener('progress', function(evt){
+			
+			var percentUploaded = (evt.loaded / evt.total) * 100;
+			document.querySelector('#progressOverlay #bar').style.width = percentUploaded + "%";
+
+		}, false);
+
+		oReq.open("POST", "/create", true);
+		
+		oReq.onload = function(oEvent) {
+
+			if (oReq.status == 200) {
+				
+				var id = oReq.responseText;
+
+				console.log("Upload successful");
+				document.querySelector('#progressOverlay').dataset.visible = "false";
+
+				(function(jobID){
+					
+					jobStatus = setInterval(function(){
+						checkJobStatus(jobID);
+					}, 5000);
+
+				})(id);
+
+				document.querySelector('#jobStatusOverlay').dataset.visible = "true";
+
+			} else {
+				console.error("Upload failed");
+				console.error(oReq);
+				if(oReq.status === 401){
+
+				}
+
+			}
+
+		};
+
+		oReq.send(formData);
+		document.querySelector('#uploadForm button').dataset.visible = "false";
+		document.querySelector('#progressOverlay #bar').style.width = "0%";
+		document.querySelector('#progressOverlay').dataset.visible = "true";
+	}
+
+	function createFormForUpload(){
+		formData = new FormData();
+
+		for(item in droppedFiles){
+			formData.append('file', droppedFiles[item]);
+		}
+
+		document.querySelector('#uploadForm button').dataset.visible="true";
+
+	}
+
+	function handleDroppedFile(event, expectedFileType){
+
+		var droppedFile = event.dataTransfer.files[0];
+		console.log(droppedFile);
+		console.log(droppedFile.type);
+
+		if(expectedFileType === "image"){
+		
+			if(droppedFile.type !== "image/jpeg" && droppedFile.type !== "image/png"){
+				return false;
+			}
+		
+		} else if(expectedFileType === "audio"){
+		
+			if(droppedFile.type !== "audio/mp3" && droppedFile.type !== "audio/mpeg"){
+				return false;
+			}
+		
+		}
+
+		droppedFiles[expectedFileType] = droppedFile;
+
+		var dZ = document.querySelector('.dropzone[data-filetype="' + expectedFileType + '"]');
+		console.log(dZ);
+		dZ.querySelector('p').innerText = droppedFile.name;
+
+		var allInputsMatched = true;
+
+		for(key in droppedFiles){
+			if(droppedFiles[key] === undefined){
+				allInputsMatched = false;
+				break;
+			}
+		}
+
+		if(allInputsMatched){
+			createFormForUpload();
+		}
+
+		console.log(allInputsMatched);
+
+	}
+
+	Array.from(document.querySelectorAll('.dropzone')).forEach(function(dropZone){
+
+		console.log(dropZone);
+		dropZone.addEventListener('drop', function(e){
+			// console.log(this.dataset.filetype);
+			handleDroppedFile(e, this.dataset.filetype);
+
+		}, false);
+
+	});
+
+</script>
