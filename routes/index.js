@@ -16,6 +16,7 @@ router.get('/', function(req, res) {
 router.post('/create', upload.array('file', 2), function(req, res){
 
   debug(req.files);
+  debug(req.body);
 
   const fileChecks = req.files.map(f => {
     return checkFile(f);
@@ -29,7 +30,7 @@ router.post('/create', upload.array('file', 2), function(req, res){
     Promise.all(fileChecks)
       .then(function(){
         
-        makeVideo.create(req.files[1], req.files[0])
+        makeVideo.create(req.files[1], req.files[0], req.body.metadata)
           .then(jobID => {
             res.send(jobID);
           })

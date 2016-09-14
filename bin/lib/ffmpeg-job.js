@@ -4,10 +4,11 @@ const spawn = require('child_process').spawn;
 const shortid = require('shortid');
 const ffmpeg = require('ffmpeg-static');
 
-function Job(image, audio){
+function Job(image, audio, metadata){
 	this.id = shortid.generate();
 	this.audio = audio;
 	this.image = image;
+	this.metadata = metadata || '';
 	this.processing = false;
 	this._process = undefined;
 	this.finished = false;
@@ -28,6 +29,8 @@ Job.prototype.start = function(){
 		'libx264',
 		'-tune',
 		'stillimage',
+		'-metadata',
+		`description=${this.metadata}`,
 		'-c:a',
 		'aac',
 		'-strict',
