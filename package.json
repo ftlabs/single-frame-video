@@ -13,6 +13,7 @@
     "express": "~4.13.4",
     "ffmpeg-static": "^2.0.0",
     "hbs": "~4.0.0",
+    "mime-sniffer": "0.0.3",
     "morgan": "~1.7.0",
     "multer": "^1.2.0",
     "serve-favicon": "~2.3.0",
