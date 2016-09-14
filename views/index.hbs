@@ -16,7 +16,7 @@
 
 <div id="progressOverlay" class="overlay" data-visible="false">
 
-	<div id="holder" class="info">
+	<div class="info">
 		<h3>Uploading files...</h3>
 		<div id="bar"></div>
 	</div>
@@ -25,7 +25,7 @@
 
 <div id="jobStatusOverlay" class="overlay" data-visible="false">
 
-	<div id="holder" class="info">
+	<div class="info">
 		<h3>Processing</h3>
 		<div id="status"></div>
 	</div>
@@ -34,7 +34,8 @@
 
 <div id="downloadOverlay" class="overlay" data-visible="false">
 
-	<div id="holder" class="info">
+	<div class="info">
+		<div class="close">x</div>
 		<h3>Download Video</h3>
 		<p>This link will be valid for 30 minutes</p>
 		<a href="">video file</a>
@@ -43,8 +44,8 @@
 </div>
 
 <div id="alertOverlay" class="overlay" data-visible="false">
-
-	<div id="holder" class="info">
+	<div class="info">
+	<div class="close">x</div>
 		<h3>Sorry</h3>
 		<p></p>	
 	</div>
@@ -100,6 +101,26 @@
 	var formData = undefined;
 
 	var jobStatus = undefined;
+
+	document.querySelectorAll('.close').forEach(function(closeBtn){
+
+		closeBtn.addEventListener('click', function(){
+
+			var element = this;
+
+			while(element !== document){
+				console.log(element);
+				if(element.getAttribute('class').indexOf('overlay') > -1){
+					element.dataset.visible = "false";
+					break;
+				} else {
+					element = element.parentNode;
+				}
+			}
+
+		}, false);
+
+	});
 
 	function checkFileIsAllowed(file, type, callback){
 
