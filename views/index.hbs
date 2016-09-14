@@ -42,6 +42,15 @@
 
 </div>
 
+<div id="alertOverlay" class="overlay" data-visible="false">
+
+	<div id="holder" class="info">
+		<h3>Sorry</h3>
+		<p></p>	
+	</div>
+
+</div>
+
 <script>
 
 	function prevent(event){
@@ -73,6 +82,13 @@
 
 	}, false);
 
+	var overlay = {
+		progress : document.querySelector('#progressOverlay'),
+		jobStatus : document.querySelector('#jobStatusOverlay'),
+		download : document.querySelector('#downloadOverlay'),
+		alert : document.querySelector('#alertOverlay')
+	};
+
 	var droppedFiles = {
 		audio : undefined,
 		image : undefined
@@ -85,6 +101,61 @@
 
 	var jobStatus = undefined;
 
+	function checkFileIsAllowed(file, type, callback){
+
+		console.log("Checking file is allowed:", file);
+
+		var reader = new FileReader();
+
+		reader.onload = function(f){
+
+			switch(type){
+				case "image":
+
+					var tmpImage = new Image();
+					tmpImage.onload = function(){
+					
+						console.log(this.width, this.height);
+						var maxDimension = 600;
+					
+						if(this.width <= maxDimension && this.height <= maxDimension){
+							callback(true);
+						} else {
+							callback(false, "The image cannot be wider or taller than " + maxDimension + " pixels");
+						}
+
+					}
+
+					tmpImage.src = f.target.result;
+
+					break;
+				case "audio":
+		
+					var tmpAudio = new Audio();
+		
+					tmpAudio.oncanplay = function(){
+						console.log(this.duration);
+						var maxMinutes = 7
+						if(this.duration <= maxMinutes * 60){
+							callback(true);
+						} else {
+							callback(false, "The .mp3 file can't be longer than " + maxMinutes + " minutes long");
+						}
+					}
+
+					tmpAudio.src = f.target.result;
+
+					break;
+				default:
+					cb(false);
+			}	
+
+		};
+
+		reader.readAsDataURL(file);
+
+	}
+
 	function checkJobStatus(id){
 
 		fetch('/check/' + id)
@@ -94,7 +165,7 @@
 			.then(function(status){
 				console.log(status);
 
-				var infoBox = document.querySelector('#jobStatusOverlay #status');
+				var infoBox = overlay.jobStatus.querySelector('#status');
 
 				if(status === "waiting"){
 					infoBox.textContent = "Job status: In queue";
@@ -104,11 +175,10 @@
 					clearInterval(jobStatus);
 					infoBox.textContent = "Job status: Finished. Getting link...";
 
-					document.querySelector('#jobStatusOverlay').dataset.visible = "false";
+					overlay.jobStatus.dataset.visible = "false"
 					
-					var downloadOverlay = document.querySelector('#downloadOverlay');
-					downloadOverlay.querySelector('a').setAttribute('href', '/download/' + id);
-					document.querySelector('#downloadOverlay').dataset.visible = "true";
+					overlay.download.querySelector('a').setAttribute('href', '/download/' + id);
+					overlay.download.dataset.visible = "true";
 
 				}
 
@@ -123,7 +193,7 @@
 		oReq.upload.addEventListener('progress', function(evt){
 			
 			var percentUploaded = (evt.loaded / evt.total) * 100;
-			document.querySelector('#progressOverlay #bar').style.width = percentUploaded + "%";
+			overlay.progress.querySelector('#bar').style.width = percentUploaded + "%";
 
 		}, false);
 
@@ -136,7 +206,7 @@
 				var id = oReq.responseText;
 
 				console.log("Upload successful");
-				document.querySelector('#progressOverlay').dataset.visible = "false";
+				overlay.progress.dataset.visible = "false";
 
 				(function(jobID){
 					
@@ -146,7 +216,7 @@
 
 				})(id);
 
-				document.querySelector('#jobStatusOverlay').dataset.visible = "true";
+				overlay.jobStatus.dataset.visible = "true";
 
 			} else {
 				console.error("Upload failed");
@@ -161,8 +231,10 @@
 
 		oReq.send(formData);
 		document.querySelector('#uploadForm button').dataset.visible = "false";
-		document.querySelector('#progressOverlay #bar').style.width = "0%";
-		document.querySelector('#progressOverlay').dataset.visible = "true";
+		
+		overlay.progress.querySelector('#bar').style.width = "0%";
+		overlay.progress.dataset.visible = "true";
+
 	}
 
 	function createFormForUpload(){
@@ -196,26 +268,39 @@
 		
 		}
 
-		droppedFiles[expectedFileType] = droppedFile;
+		checkFileIsAllowed(droppedFile, expectedFileType, function(allowed, reason){
 
-		var dZ = document.querySelector('.dropzone[data-filetype="' + expectedFileType + '"]');
-		console.log(dZ);
-		dZ.querySelector('p').innerText = droppedFile.name;
+			if(allowed){
 
-		var allInputsMatched = true;
+				droppedFiles[expectedFileType] = droppedFile;
 
-		for(key in droppedFiles){
-			if(droppedFiles[key] === undefined){
-				allInputsMatched = false;
-				break;
+				var dZ = document.querySelector('.dropzone[data-filetype="' + expectedFileType + '"]');
+				dZ.querySelector('p').innerText = droppedFile.name;
+				console.log(dZ);
+
+				var allInputsMatched = true;
+
+				for(key in droppedFiles){
+					if(droppedFiles[key] === undefined){
+						allInputsMatched = false;
+						break;
+					}
+				}
+
+				if(allInputsMatched){
+					createFormForUpload();
+				}
+
+				console.log(allInputsMatched);
+
+			} else {
+
+				overlay.alert.dataset.visible = "true";
+				overlay.alert.querySelector('p').textContent = reason;
+
 			}
-		}
 
-		if(allInputsMatched){
-			createFormForUpload();
-		}
-
-		console.log(allInputsMatched);
+		});
 
 	}
 
