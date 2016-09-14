@@ -79,9 +79,9 @@ function checkStateOfJob(id){
 
 }
 
-function convertImageAndAudioToVideo(image, audio){
+function convertImageAndAudioToVideo(image, audio, metadata){
 	
-	const job = new FfmpegJob(image, audio);
+	const job = new FfmpegJob(image, audio, metadata);
 	waitingJobs.push(job);
 	return Promise.resolve(job.id);
 

@@ -9,8 +9,19 @@
 	<div id="imageDrop" class="dropzone" data-filetype="image">
 		<p class="filename">Drop image file here</p>
 	</div>
+	
+	<div id="metadata">
+		<h3>Add metadata</h3>
+		<span id="count">Characters remaining:<a>255</a></span>
+		<div class="fields">
+			<div class="item">
+				<input type="text" placeholder="Key" />&nbsp;=&nbsp;<input type="text" placeholder="Value" />
+			</div>
+		</div>
+		<span class="o-buttons" id="extraField">Add field</span>
+	</div>
 
-	<button class="o-buttons" data-visible="false">Upload</button>
+	<button class="o-buttons" id="uploadBtn" data-visible="false">Upload</button>
 
 </form>
 
@@ -77,6 +88,8 @@
 	document.querySelector('#uploadForm').addEventListener('submit', function(e){
 		prevent(e);
 
+		createFormForUpload();
+		
 		if(formData !== undefined){
 			uploadFormToServer();
 		}
@@ -101,6 +114,53 @@
 	var formData = undefined;
 
 	var jobStatus = undefined;
+
+	document.querySelector('#extraField').addEventListener('click', function(){
+
+		var newPairFrag = document.createDocumentFragment();
+		var itemHolder = document.createElement('div');
+		var eq = document.createTextNode(" = ");
+		var i1 = document.createElement('input');
+		var i2 = document.createElement('input');
+
+		itemHolder.setAttribute('class', 'item');
+
+		i1.setAttribute('type', 'text');
+		i2.setAttribute('type', 'text');
+
+		i1.setAttribute('placeholder', 'Key');
+		i2.setAttribute('placeholder', 'Value');
+
+		itemHolder.appendChild(i1);
+		itemHolder.appendChild(eq);
+		itemHolder.appendChild(i2);
+
+		document.querySelector('#uploadForm #metadata .fields').appendChild(itemHolder);
+
+	}, false);
+
+	function prepareMetadataForTransfer(inputs){
+		var content = "";
+		for(var x = 0; x < inputs.length; x += 2){
+			content += encodeURIComponent(inputs[x].value) + "=" + encodeURIComponent(inputs[x + 1].value) + ",";
+		}
+
+		if(content === "=,"){
+			return "";
+		} else {
+			return content;
+		}
+
+	}
+
+	document.querySelector('#metadata').addEventListener('keyup', function(){
+		
+		var allInputFields = this.querySelectorAll('.fields input[type="text"]');
+		var encodedText = prepareMetadataForTransfer(allInputFields)
+
+		this.querySelector('#count a').textContent = 255 - encodedText.length;
+
+	}, false);
 
 	document.querySelectorAll('.close').forEach(function(closeBtn){
 
@@ -251,7 +311,7 @@
 		};
 
 		oReq.send(formData);
-		document.querySelector('#uploadForm button').dataset.visible = "false";
+		document.querySelector('#uploadForm #uploadBtn').dataset.visible = "false";
 		
 		overlay.progress.querySelector('#bar').style.width = "0%";
 		overlay.progress.dataset.visible = "true";
@@ -265,8 +325,7 @@
 			formData.append('file', droppedFiles[item]);
 		}
 
-		document.querySelector('#uploadForm button').dataset.visible="true";
-
+		formData.append('metadata', prepareMetadataForTransfer(document.querySelectorAll('#metadata .fields input[type="text"]')) ); 
 	}
 
 	function handleDroppedFile(event, expectedFileType){
@@ -309,7 +368,7 @@
 				}
 
 				if(allInputsMatched){
-					createFormForUpload();
+					document.querySelector('#uploadForm #uploadBtn').dataset.visible="true";
 				}
 
 				console.log(allInputsMatched);
