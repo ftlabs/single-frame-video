@@ -21,4 +21,17 @@ You will need:
 	- is no more than 600 x 600 pixels
 	- has dimensions that are divisible by two
 
-Drag the MP3 file onto the left square in the page and then drag your JPEG/PNG onto the right square in the page. If an incorrect file type is dropped in either of the spaces, an error dialog will appear.
+Drag the MP3 file onto the left square in the page and then drag your JPEG/PNG onto the right square in the page.
+
+![labs-sfv-upload-demo](https://cloud.githubusercontent.com/assets/913687/23856225/e0e00468-07f0-11e7-9ee8-be36e6e15f93.gif)
+
+If an incorrect file type is dropped in either of the spaces, an error dialog will appear.
+
+Once an image file and an audio file have been selected, an upload button will appear. Clicking it will send both files to the server and will create a 'job' that's added to a queue for processing. A dialog will appear in the center of the screen that will update with progress as it happens.
+
+Once the MP4 creation process has completed, a download button will appear. You now have an MP4 file that you can upload to your social media sites.
+
+#### Metadata
+
+It's also possible to add metadata to the generated mp4 file. Any metadata passed with the provided form will be saved as a query string in the 'description' field of the MP4 files ID3 tags.
+
