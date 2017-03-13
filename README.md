@@ -29,9 +29,6 @@ If an incorrect file type is dropped in either of the spaces, an error dialog wi
 
 Once an image file and an audio file have been selected, an upload button will appear. Clicking it will send both files to the server and will create a 'job' that's added to a queue for processing. A dialog will appear in the center of the screen that will update with progress as it happens.
 
-![processing](https://cloud.githubusercontent.com/assets/913687/23857432/389c62c4-07f5-11e7-8ffa-6eade6aaaf3f.gif)
-
-
 Once the MP4 creation process has completed, a download button will appear. This link will be valid for **30 minutes**, after which, the file will be deleted from the system.
 
 You now have an MP4 file that you can upload to your social media sites.
