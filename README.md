@@ -10,7 +10,7 @@ Lot's of social media sites allow us to upload video, but not audio files - and 
 
 ### How do I use it?
 
-You can head to [the live site](https://ftlabs-sfv-service.herokuapp.com) (behind S3O) and try it out 
+**THIS SERVICE IS NO LONGER AVAILABLE, BUT IF IT WERE, THIS IS HOW YOU WOULD USE IT**
 
 _(not mobile-friendly, sorry)_
 
@@ -37,3 +37,27 @@ You now have an MP4 file that you can upload to your social media sites.
 
 It's also possible to add metadata to the generated mp4 file. Any metadata passed with the provided form will be saved as a query string in the 'description' field of the MP4 files ID3 tags.
 
+### Environment Variables
+
+#### TMP_FOLDER
+The destination to store files while they await processing. Defaults to `/tmp/`
+
+#### MAX_JOB_AGE
+The number of minutes that a completed job will be stored for.
+
+#### DEBUG
+`*` for everything.
+
+#### VALID_FILE_MIMES
+The file types that the server will accept for combinations. Recommended value `image/jpeg,image/png,audio/mpeg,audio/mp3`.
+
+### Deploying (on Heroku)
+
+To run your own version of the service, follow these steps.
+
+1. Clone this repo
+2. Create a Heroku app 
+	- With the CLI tools: `heroku create [NEW_APP_NAME]`
+3. Set the appropriate environment variables
+4. Deploy with `git push heroku master`
+5. View your new service at `https://NEW_APP_NAME.herokuapp.com`
